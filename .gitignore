@@ -222,3 +222,4 @@ $RECYCLE.BIN/
 build
 .env
 lib
+.idea

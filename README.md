@@ -1,3 +1,11 @@
+# @pagoda/typegoose
+
+This is the pagoda's customized version of typegoose.All the code is base on [typegoose](https://github.com/szokodiakos/typegoose#readme).
+
+
+
+# Following is the origin version of readme.
+
 # Typegoose
 
 [![Build Status](https://travis-ci.org/szokodiakos/typegoose.svg?branch=master)](https://travis-ci.org/szokodiakos/typegoose)
@@ -235,12 +243,12 @@ nickName?: string;
     @prop({ default: 'Nick' })
     nickName?: string;
     ```
-    
+
   - `_id`: When false, no \_id is added to the subdocument
 
     ```typescript
     class Car extends Typegoose {}
-    
+
     @prop({ _id: false })
     car?: Car;
     ```
