@@ -5,7 +5,7 @@ import { Gender, Genders } from '../enums/genders';
 import { Job } from './job';
 import { Role } from '../enums/role';
 import {
-  arrayProp,
+  arrayProp, getModelForClass,
   instanceMethod,
   InstanceType,
   ModelType,
@@ -22,7 +22,7 @@ export interface FindOrCreateResult<T> {
 }
 
 @plugin(findOrCreate)
-export class User extends Typegoose {
+export class User extends Typegoose<User> {
   @prop({ required: true })
   firstName: string;
 
@@ -33,6 +33,7 @@ export class User extends Typegoose {
   get fullName() {
     return `${this.firstName} ${this.lastName}`;
   }
+
   set fullName(full) {
     const split = full.split(' ');
     this.firstName = split[0];
@@ -107,4 +108,4 @@ export class User extends Typegoose {
   static findOrCreate: (condition: any) => Promise<FindOrCreateResult<User>>;
 }
 
-export const model = new User().getModelForClass(User);
+export const model = getModelForClass(User);

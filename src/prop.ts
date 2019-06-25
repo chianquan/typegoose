@@ -6,6 +6,7 @@ import { schema, virtuals, methods } from './data';
 import { isPrimitive, initAsObject, initAsArray, isString, isNumber, isObject } from './utils';
 import { InvalidPropError, NotNumberTypeError, NotStringTypeError, NoMetadataError } from './errors';
 import { ObjectID } from 'bson';
+import { Schema, SchemaType } from 'mongoose';
 
 export type Func = (...args: any[]) => any;
 
@@ -16,9 +17,9 @@ export type Validator =
   | ValidatorFunction
   | RegExp
   | {
-    validator: ValidatorFunction;
-    message?: string;
-  };
+  validator: ValidatorFunction;
+  message?: string;
+};
 
 export interface BasePropOptions {
   required?: RequiredType;
@@ -74,7 +75,7 @@ const isWithStringTransform = (options: PropOptionsWithStringValidate) =>
 
 const isWithNumberValidate = (options: PropOptionsWithNumberValidate) => options.min || options.max;
 
-const baseProp = (rawOptions: any, Type: any, target: any, key: any, isArray = false) => {
+const baseProp = (rawOptions: PropOptionsWithValidate & ExtendProp, Type: any, target: any, key: any, isArray = false) => {
   const name: string = target.constructor.name;
   const isGetterSetter = Object.getOwnPropertyDescriptor(target, key);
   if (isGetterSetter) {
@@ -202,7 +203,7 @@ const baseProp = (rawOptions: any, Type: any, target: any, key: any, isArray = f
       ...schema[name][key][0],
       ...options,
       type: [{
-        ...(typeof options._id !== 'undefined' ? {_id: options._id} : {}),
+        ...(typeof options._id !== 'undefined' ? { _id: options._id } : {}),
         ...subSchema,
       }],
     };
@@ -227,7 +228,13 @@ const baseProp = (rawOptions: any, Type: any, target: any, key: any, isArray = f
   return;
 };
 
-export const prop = (options: PropOptionsWithValidate = {}) => (target: any, key: string) => {
+interface ExtendProp {
+  type?: SchemaType
+
+  [key: string]: any
+}
+
+export const prop = (options: PropOptionsWithValidate & ExtendProp = {}) => (target: any, key: string) => {
   const Type = (Reflect as any).getMetadata('design:type', target, key);
 
   if (!Type) {

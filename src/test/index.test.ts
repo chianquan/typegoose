@@ -11,8 +11,8 @@ import { Role } from './enums/role';
 import { initDatabase, closeDatabase } from './utils/mongoConnect';
 import { getClassForDocument } from '../utils';
 import { fail } from 'assert';
-import { Virtual, VirtualSub } from "./models/virtualprop";
-import { ObjectID } from "bson";
+import { Virtual, VirtualSub } from './models/virtualprop';
+import { ObjectID } from 'bson';
 
 describe('Typegoose', () => {
   before(() => initDatabase());
@@ -47,7 +47,7 @@ describe('Typegoose', () => {
         position: 'Lead',
         jobType: {
           salery: 5000,
-          field: "IT",
+          field: 'IT',
         },
       },
       car: car.id,
@@ -81,7 +81,7 @@ describe('Typegoose', () => {
       expect(foundUser.job).to.have.property('position', 'Lead');
       expect(foundUser.job).to.have.property('startedAt').to.be.instanceof(Date);
       expect(foundUser.job.jobType).to.not.have.property('_id');
-      expect(foundUser.job.titleInUppercase()).to.eq("Developer".toUpperCase());
+      expect(foundUser.job.titleInUppercase()).to.eq('Developer'.toUpperCase());
       expect(foundUser.job.jobType).to.have.property('salery', 5000);
       expect(foundUser.job.jobType).to.have.property('field', 'IT');
       expect(foundUser.job.jobType).to.have.property('salery').to.be.a('number');
@@ -189,22 +189,25 @@ describe('Typegoose', () => {
     expect(created).to.be.false;
   });
 
-  it("should add and populate the virtual properties", async () => {
+  it('should add and populate the virtual properties', async () => {
     const virtualModel = new Virtual().getModelForClass(Virtual);
     const virtualSubModel = new VirtualSub().getModelForClass(VirtualSub);
 
-    const virtual1 = await new virtualModel({ dummyVirtual: "dummyVirtual1" } as Virtual).save();
-    const virtualsub1 = await new virtualSubModel({ dummy: "virtualSub1", virtual: virtual1._id } as VirtualSub).save();
-    const virtualsub2 = await new virtualSubModel({ dummy: "virtualSub2", virtual: new ObjectID() } as VirtualSub).save();
-    const virtualsub3 = await new virtualSubModel({ dummy: "virtualSub3", virtual: virtual1._id } as VirtualSub).save();
+    const virtual1 = await new virtualModel({ dummyVirtual: 'dummyVirtual1' } as Virtual).save();
+    const virtualsub1 = await new virtualSubModel({ dummy: 'virtualSub1', virtual: virtual1._id } as VirtualSub).save();
+    const virtualsub2 = await new virtualSubModel({
+      dummy: 'virtualSub2',
+      virtual: new ObjectID(),
+    } as VirtualSub).save();
+    const virtualsub3 = await new virtualSubModel({ dummy: 'virtualSub3', virtual: virtual1._id } as VirtualSub).save();
 
-    const newfound = await virtualModel.findById(virtual1._id).populate("virtualSubs").exec();
+    const newfound = await virtualModel.findById(virtual1._id).populate('virtualSubs').exec();
 
-    expect(newfound.dummyVirtual).to.be.equal("dummyVirtual1");
-    expect(newfound.virtualSubs).to.not.be.an("undefined");
-    expect(newfound.virtualSubs[0].dummy).to.be.equal("virtualSub1");
+    expect(newfound.dummyVirtual).to.be.equal('dummyVirtual1');
+    expect(newfound.virtualSubs).to.not.be.an('undefined');
+    expect(newfound.virtualSubs[0].dummy).to.be.equal('virtualSub1');
     expect(newfound.virtualSubs[0]._id.toString()).to.be.equal(virtualsub1._id.toString());
-    expect(newfound.virtualSubs[1].dummy).to.be.equal("virtualSub3");
+    expect(newfound.virtualSubs[1].dummy).to.be.equal('virtualSub3');
     expect(newfound.virtualSubs[1]._id.toString()).to.be.equal(virtualsub3._id.toString());
     expect(newfound.virtualSubs).to.not.include(virtualsub2);
   });
