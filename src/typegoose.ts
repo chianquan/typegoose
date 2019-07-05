@@ -9,16 +9,11 @@ import {
   schema, schemaIsLoadedMap,
   schemaObjMap,
   schemaOptionsMap,
+  RefType,
 } from './data';
 import { Model, Schema } from 'mongoose';
-import { RefType } from './prop';
 
-export * from './prop';
-export * from './schemaOptions';
-export * from './hooks';
-export * from './plugin';
-export * from '.';
-
+export * from './data';
 export type mongooseDocument<T> = T & mongoose.Document;
 
 function isFunction(functionToCheck) {
