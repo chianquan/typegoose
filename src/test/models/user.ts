@@ -1,3 +1,5 @@
+import { Model } from 'mongoose';
+
 const findOrCreate = require('mongoose-findorcreate');
 
 import { Car } from './car';
@@ -22,7 +24,7 @@ export interface FindOrCreateResult<T> {
 }
 
 @plugin(findOrCreate)
-export class User extends Typegoose<User> {
+export class User extends Model {
   @prop({ required: true })
   firstName: string;
 
@@ -106,6 +108,10 @@ export class User extends Typegoose<User> {
   }
 
   static findOrCreate: (condition: any) => Promise<FindOrCreateResult<User>>;
+
+  static staticFun() {
+    this.findByAge();
+  }
 }
 
 export const model = getModelForClass(User);
