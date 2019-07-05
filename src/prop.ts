@@ -65,41 +65,23 @@ export type PropOptionsWithNumberValidate = PropOptions & ValidateNumberOptions;
 export type PropOptionsWithStringValidate = PropOptions & TransformStringOptions & ValidateStringOptions;
 export type PropOptionsWithValidate = PropOptionsWithNumberValidate | PropOptionsWithStringValidate | VirtualOptions;
 
-export const isWithStringValidate = (options: PropOptionsWithStringValidate) =>
-  options.minlength || options.maxlength || options.match;
-
-export const isWithStringTransform = (options: PropOptionsWithStringValidate) =>
-  options.lowercase || options.uppercase || options.trim;
-
-export const isWithNumberValidate = (options: PropOptionsWithNumberValidate) => options.min || options.max;
-
-const baseProp = (rawOptions: PropOptionsWithValidate & ExtendProp, Type: any, target: any, key: any, isArray = false) => {
-  const name: string = target.constructor.name;
-  if (!schema[name]) {
-    schema[name] = {};
-  }
-  schema[name][key] = { rawOptions, Type, isArray };
-  return;
-};
-
 export interface ExtendProp {
   type?: any,
+  isArray?: boolean,
 
-  [key: string]: any
+  [key: string]: any,
+
 }
 
 export const prop = (options: PropOptionsWithValidate & ExtendProp = {}) => (target: any, key: string) => {
   const Type = (Reflect as any).getMetadata('design:type', target, key);
-
-  if (!Type) {
-    throw new NoMetadataError(key);
+  let fieldConfig = schema.get(target.constructor);
+  if (!fieldConfig) {
+    fieldConfig = {};
+    schema.set(target.constructor, fieldConfig);
   }
-
-  baseProp(options, Type, target, key);
-};
-
-export const arrayProp = (options: PropOptionsWithValidate & ExtendProp = {}) => (target: any, key: string) => {
-  baseProp(options, null, target, key, true);
+  fieldConfig[key] = { rawOptions: options, Type };
+  return;
 };
 
 export type Ref<T> = T | ObjectID;

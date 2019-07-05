@@ -9,6 +9,8 @@
   ],
   "scripts": {
     "start": "npm run build && node ./lib/typegoose.js",
+    "one": "node $NODE_DEBUG_OPTION --require ts-node/register ./src/one.ts",
+    "onejs": "npm run build&&node $NODE_DEBUG_OPTION ./lib/one.js",
     "build": "rimraf lib && tsc",
     "lint": "tslint --project tsconfig.json",
     "test": "npm run lint && nyc npm run mocha",
@@ -48,6 +50,7 @@
     "typescript": "3.5.1"
   },
   "dependencies": {
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.1.13",
+    "ts-node": "^8.3.0"
   }
 }

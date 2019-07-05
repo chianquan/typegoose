@@ -385,7 +385,7 @@ Note that the `& typeof T` is only mandatory if we want to use the developer def
 
 #### instanceMethod
 
-Instance methods are on the Mongoose document instances, thus they must be defined as non-static methods. Again if we want to call other instance methods the type of `this` must be redefined to `InstanceType<T>` (see Types).
+Instance methods are on the Mongoose document instances, thus they must be defined as non-static methods. Again if we want to call other instance methods the type of `this` must be redefined to `mongooseDocument<T>` (see Types).
 
 ```typescript
 @instanceMethod
@@ -504,11 +504,11 @@ Some additional types were added to make Typegoose more user friendly.
 
 This is basically the logical 'and' of the `T` and the `mongoose.Document`, so that both the Mongoose instance properties/functions and the user defined properties/instance methods are available on the instance.
 
-Note: TypeScript has its own InstanceType, you should import it from Typegoose
+Note: TypeScript has its own mongooseDocument, you should import it from Typegoose
 
 #### ModelType<T>
 
-This is the logical 'and' of `mongoose.Model<InstanceType<T>>` and `T`, so that the Mongoose model creates `InstanceType<T>` typed instances and all user defined static methods are available on the model.
+This is the logical 'and' of `mongoose.Model<mongooseDocument<T>>` and `T`, so that the Mongoose model creates `mongooseDocument<T>` typed instances and all user defined static methods are available on the model.
 
 #### Ref<T>
 

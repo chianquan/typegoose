@@ -2,7 +2,7 @@
 
 import { MongooseDocument } from 'mongoose';
 
-import { hooks as hooksData } from './data';
+import { hooksMap } from './data';
 
 type DocumentMethod = 'init' | 'validate' | 'save' | 'remove';
 type QueryMethod =
@@ -46,21 +46,26 @@ type MultipleMethod = 'find' | 'update';
 
 interface Hooks {
   pre<T>(method: DocumentMethod, fn: DocumentPreSerialFn<T>): ClassDecorator;
+
   pre<T>(method: DocumentMethod, parallel: boolean, fn: DocumentPreParallelFn<T>): ClassDecorator;
 
   pre<T>(method: QueryMethod | ModelMethod, fn: SimplePreSerialFn<T>): ClassDecorator;
+
   pre<T>(method: QueryMethod | ModelMethod, parallel: boolean, fn: SimplePreParallelFn<T>): ClassDecorator;
 
   // I had to disable linter to allow this. I only got proper code completion separating the functions
   post<T>(method: NumberMethod, fn: PostNumberResponse<T>): ClassDecorator;
+
   // tslint:disable-next-line:unified-signatures
   post<T>(method: NumberMethod, fn: PostNumberWithError<T>): ClassDecorator;
 
   post<T>(method: SingleMethod, fn: PostSingleResponse<T>): ClassDecorator;
+
   // tslint:disable-next-line:unified-signatures
   post<T>(method: SingleMethod, fn: PostSingleWithError<T>): ClassDecorator;
 
   post<T>(method: MultipleMethod, fn: PostMultipleResponse<T>): ClassDecorator;
+
   // tslint:disable-next-line:unified-signatures
   post<T>(method: MultipleMethod, fn: PostMultipleWithError<T>): ClassDecorator;
 
@@ -69,22 +74,24 @@ interface Hooks {
 
 const hooks: Hooks = {
   pre(...args) {
-    return (constructor: any) => {
-      addToHooks(constructor.name, 'pre', args);
+    return (target: any) => {
+      addToHooks(target.constructor, 'pre', args);
     };
   },
   post(...args) {
-    return (constructor: any) => {
-      addToHooks(constructor.name, 'post', args);
+    return (target: any) => {
+      addToHooks(target.constructor, 'post', args);
     };
   },
 };
 
-const addToHooks = (name, hookType: 'pre' | 'post', args) => {
-  if (!hooksData[name]) {
-    hooksData[name] = { pre: [], post: [] };
+const addToHooks = (t: () => any, hookType: 'pre' | 'post', args) => {
+  let hookData = hooksMap.get(t);
+  if (!hookData) {
+    hookData = { pre: [], post: [] };
+    hooksMap.set(t, hookData);
   }
-  hooksData[name][hookType].push(args);
+  hookData[hookType].push(args);
 };
 
 export const pre = hooks.pre;

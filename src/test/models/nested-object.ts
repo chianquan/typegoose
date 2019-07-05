@@ -1,21 +1,18 @@
-import * as mongoose from 'mongoose';
-import * as tg from '../../typegoose';
+import { Model } from 'mongoose';
+import { getModelForClass, prop } from '../../typegoose';
 
-export class AddressNested {
+export class AddressNested extends Model {
+  @prop()
   street: string;
-
-  constructor(street: string) {
-    this.street = street;
-  }
 }
 
-export class PersonNested extends tg.Typegoose {
-  @tg.prop()
+export class PersonNested extends Model {
+  @prop()
   name: string;
-  @tg.prop()
+  @prop()
   address: AddressNested;
-  @tg.prop()
+  @prop()
   moreAddresses: AddressNested[] = [];
 }
 
-export const PersonNestedModel = new PersonNested().getModelForClass(PersonNested);
+export const PersonNestedModel = getModelForClass(PersonNested);

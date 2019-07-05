@@ -1,14 +1,13 @@
-import * as mongoose from 'mongoose';
-
 import { index } from '../..';
-import { Ref, arrayProp } from '../../prop';
-import { prop, Typegoose } from '../../typegoose';
+import { Ref } from '../../prop';
+import { getModelForClass, prop } from '../../typegoose';
 import { Car } from './car';
 import { User } from './user';
+import { Model } from 'mongoose';
 
 @index({ car: 1, user: 1 }, { unique: true })
-@index({ location: '2dsphere'})
-export class Rating extends Typegoose {
+@index({ location: '2dsphere' })
+export class Rating extends Model {
   @prop({ ref: Car })
   car: Ref<Car>;
 
@@ -18,8 +17,8 @@ export class Rating extends Typegoose {
   @prop()
   stars: number;
 
-  @arrayProp({ items: Array })
+  @prop({ type: Array })
   location: [[number]];
 }
 
-export const model = new Rating().getModelForClass(Rating);
+export const model = getModelForClass(Rating);

@@ -1,6 +1,7 @@
-import { instanceMethod, prop } from '../../typegoose';
+import { Model } from 'mongoose';
+import { prop } from '../../typegoose';
 
-export class JobType {
+export class JobType extends Model {
   @prop({ required: true })
   field: string;
 
@@ -8,7 +9,7 @@ export class JobType {
   salery: number;
 }
 
-export class Job {
+export class Job extends Model {
   @prop()
   title?: string;
 
@@ -21,7 +22,6 @@ export class Job {
   @prop({ _id: false })
   jobType?: JobType;
 
-  @instanceMethod
   titleInUppercase?() {
     return this.title.toUpperCase();
   }

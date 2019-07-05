@@ -7,20 +7,15 @@ import { Gender, Genders } from '../enums/genders';
 import { Job } from './job';
 import { Role } from '../enums/role';
 import {
-  arrayProp, getModelForClass,
-  instanceMethod,
-  InstanceType,
-  ModelType,
+  getModelForClass, mongooseDocument,
   plugin,
   prop,
   Ref,
-  staticMethod,
-  Typegoose,
 } from '../../typegoose';
 
 export interface FindOrCreateResult<T> {
   created: boolean;
-  doc: InstanceType<T>;
+  doc: mongooseDocument<T>;
 }
 
 @plugin(findOrCreate)
@@ -31,7 +26,6 @@ export class User extends Model {
   @prop({ required: true })
   lastName: string;
 
-  @prop()
   get fullName() {
     return `${this.firstName} ${this.lastName}`;
   }
@@ -63,7 +57,7 @@ export class User extends Model {
   @prop({ enum: Role })
   role: Role;
 
-  @arrayProp({ items: String, enum: Role, default: Role.Guest })
+  @prop({ type: String, enum: Role, default: Role.Guest })
   roles: Role[];
 
   @prop()
@@ -72,36 +66,32 @@ export class User extends Model {
   @prop({ ref: Car })
   car?: Ref<Car>;
 
-  @arrayProp({ items: String, required: true })
+  @prop({ type: String, required: true })
   languages: string[];
 
-  @arrayProp({ items: Job })
+  @prop({ type: () => Job })
   previousJobs?: Job[];
 
-  @arrayProp({ itemsRef: Car })
+  @prop({ ref: Car })
   previousCars?: Ref<Car>[];
 
-  @staticMethod
-  static findByAge(this: ModelType<User> & typeof User, age: number) {
+  static findByAge(age: number) {
     return this.findOne({ age });
   }
 
-  @instanceMethod
-  incrementAge(this: InstanceType<User>) {
+  incrementAge() {
     const age = this.age || 1;
     this.age = age + 1;
     return this.save();
   }
 
-  @instanceMethod
-  addLanguage(this: InstanceType<User>) {
+  addLanguage() {
     this.languages.push('Hungarian');
 
     return this.save();
   }
 
-  @instanceMethod
-  addJob(this: InstanceType<User>, job: Partial<Job> = {}) {
+  addJob(job: Job = {}) {
     this.previousJobs.push(job);
 
     return this.save();
@@ -109,9 +99,7 @@ export class User extends Model {
 
   static findOrCreate: (condition: any) => Promise<FindOrCreateResult<User>>;
 
-  static staticFun() {
-    this.findByAge();
-  }
 }
 
 export const model = getModelForClass(User);
+

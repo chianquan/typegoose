@@ -1,11 +1,12 @@
 /** @format */
 
-import { plugins } from './data';
+import { pluginsMap } from './data';
 
-export const plugin = (mongoosePlugin: any, options?: any) => (constructor: any) => {
-  const name: string = constructor.name;
-  if (!plugins[name]) {
-    plugins[name] = [];
+export const plugin = (mongoosePlugin: any, options?: any) => (target: any) => {
+  let plugins = pluginsMap.get(target.constructor);
+  if (!plugins) {
+    plugins = [];
+    pluginsMap.set(target.constructor, plugins);
   }
-  plugins[name].push({ mongoosePlugin, options });
+  plugins.push({ mongoosePlugin, options });
 };

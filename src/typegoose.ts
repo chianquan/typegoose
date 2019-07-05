@@ -4,28 +4,22 @@ import 'reflect-metadata';
 import * as mongoose from 'mongoose';
 
 import {
-  constructors,
-  hooks,
-  models,
-  plugins,
+  hooksMap,
+  pluginsMap,
   schema, schemaIsLoadedMap,
   schemaObjMap,
   schemaOptionsMap,
 } from './data';
-import { isNumber, isString } from './utils';
-import { NotNumberTypeError, NotStringTypeError } from './errors';
 import { Model, Schema } from 'mongoose';
-import { isWithNumberValidate, isWithStringTransform, isWithStringValidate, RefType } from './prop';
+import { RefType } from './prop';
 
 export * from './prop';
 export * from './schemaOptions';
 export * from './hooks';
 export * from './plugin';
 export * from '.';
-export { getClassForDocument } from './utils';
 
-export type InstanceType<T> = T & mongoose.Document;
-export type ModelType<T> = mongoose.Model<InstanceType<T>> & T;
+export type mongooseDocument<T> = T & mongoose.Document;
 
 function isFunction(functionToCheck) {
   return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
@@ -36,22 +30,15 @@ export interface GetModelForClassOptions {
   existingConnection?: mongoose.Connection;
 }
 
-export function getModelForClass<T>(t: T & (new() => any), { existingMongoose, existingConnection }: GetModelForClassOptions = {}) {
-  const name = this.constructor.name;
-  if (!models[name]) { // Is't necessary?
-    const sch = getSchemaForClass(t);
-    let model = mongoose.model.bind(mongoose);
-    if (existingConnection) {
-      model = existingConnection.model.bind(existingConnection);
-    } else if (existingMongoose) {
-      model = existingMongoose.model.bind(existingMongoose);
-    }
-
-    models[name] = model(name, sch);
-    constructors[name] = this.constructor;
+export function getModelForClass<T extends new (...args: any) => any>(t: T, { existingMongoose, existingConnection }: GetModelForClassOptions = {}) {
+  const sch = getSchemaForClass(t);
+  let model = mongoose.model.bind(mongoose);
+  if (existingConnection) {
+    model = existingConnection.model.bind(existingConnection);
+  } else if (existingMongoose) {
+    model = existingMongoose.model.bind(existingMongoose);
   }
-
-  return models[name] as ModelType<T>;
+  return model(t.name, sch) as mongoose.Model<mongooseDocument<InstanceType<T>>> & T;
 }
 
 export function getSchemaForClass<T>(t: T & (new() => T)): mongoose.Schema {
@@ -65,9 +52,9 @@ export function getSchemaForClass<T>(t: T & (new() => T)): mongoose.Schema {
   if (schemaIsLoaded) {
     return sch;
   }
+  schemaIsLoadedMap.set(t, true);
   myLoadClass.call(sch, t);
   sch.loadClass(t);
-  schemaIsLoadedMap.set(t, true);
   return sch;
 }
 
@@ -78,12 +65,13 @@ function myLoadClass<T>(this: Schema, t: T & (new() => T)) {
     t.prototype.hasOwnProperty('$isMongooseModelPrototype')) {
     return this;
   }
-
-  const name = t.name;
-  const originSchemaConfig = schema[name] || {};
+  myLoadClass.call(this, Object.getPrototypeOf(t));
+  const originSchemaConfig = schema.get(t) || {};
   for (const key of Object.keys(originSchemaConfig)) {
-    const { isArray, Type, rawOptions } = originSchemaConfig[key];
-    const { ref: originRef, type: originType, enum: originEnumOption, ...moreRawOptions } = rawOptions;
+    const { Type, rawOptions } = originSchemaConfig[key];
+    const { isArray: originIsArray, ref: originRef, type: originType, enum: originEnumOption, ...moreRawOptions } = rawOptions;
+    const isArray = originIsArray === undefined ? Type === Array : originIsArray;
+
     const ref: string | undefined = ((refType: (() => RefType) | RefType) => {
       if (refType === undefined) {
         return;
@@ -91,7 +79,10 @@ function myLoadClass<T>(this: Schema, t: T & (new() => T)) {
       if (typeof refType === 'string') {
         return refType;
       }
-      if (refType.name) {
+      if (!isFunction(refType)) {
+        throw new Error('ref无法识别:' + refType);
+      }
+      if (refType.name && refType.name !== 'ref') {
         return refType.name;
       }
       if (typeof refType === 'function') {
@@ -103,59 +94,49 @@ function myLoadClass<T>(this: Schema, t: T & (new() => T)) {
       if (refType.name) {
         return refType.name;
       }
-      throw new Error('ref无法识别');
+      throw new Error('ref无法识别:' + refType);
     })(originRef);
+    if (isArray && !originType && !ref) {
+      throw new Error(`class '${t.name}' field '${key}':Array 's type is require`);
+    }
     let type = originType;
+    if (type && (!type.name || type.name === 'type')) {
+      type = type();
+    }
     if (ref && !type) {
       type = mongoose.Schema.Types.ObjectId;
     }
     const enumOption = originEnumOption && !Array.isArray(originEnumOption) ?
       Object.keys(originEnumOption).map(propKey => originEnumOption[propKey]) : originEnumOption;
-
-    // check for validation inconsistencies
-    if (isWithStringValidate(rawOptions) && !isString(Type)) {
-      throw new NotStringTypeError(key);
-    }
-
-    if (isWithNumberValidate(rawOptions) && !isNumber(Type)) {
-      throw new NotNumberTypeError(key);
-    }
-
-    // check for transform inconsistencies
-    if (isWithStringTransform(rawOptions) && !isString(Type)) {
-      throw new NotStringTypeError(key);
-    }
     if (!type) {
       type = Type ? Type : Schema.Types.Mixed;
-    }
-    // 如果是匿名函数 warming
-    if (!type.name) {
-      if (!isFunction(type)) {
-        throw new Error('未知输入');
-      }
-      type = type();
     }
     if (Model.prototype.isPrototypeOf(type.prototype)) {
       type = getSchemaForClass(type);
     }
     const schemaTypeOpt = { ref, type, enum: enumOption, ...moreRawOptions };
+    if (schemaTypeOpt.ref === undefined) {
+      delete schemaTypeOpt.ref;
+    }
+    if (schemaTypeOpt.enum === undefined) {
+      delete schemaTypeOpt.enum;
+    }
     this.path(key, isArray ? [schemaTypeOpt] : schemaTypeOpt);
   }
-
-
-  if (hooks[name]) {
-    const preHooks = hooks[name].pre;
+  const hooks = hooksMap.get(t);
+  if (hooks) {
+    const preHooks = hooks.pre;
     preHooks.forEach(preHookArgs => {
       (this as any).pre(...preHookArgs);
     });
-    const postHooks = hooks[name].post;
+    const postHooks = hooks.post;
     postHooks.forEach(postHookArgs => {
       (this as any).post(...postHookArgs);
     });
   }
-
-  if (plugins[name]) {
-    for (const plugin of plugins[name]) {
+  const plugins = pluginsMap.get(t);
+  if (plugins) {
+    for (const plugin of plugins) {
       this.plugin(plugin.mongoosePlugin, plugin.options);
     }
   }
