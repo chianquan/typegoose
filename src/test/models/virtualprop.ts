@@ -1,5 +1,5 @@
-import { prop, Ref } from '../../typegoose';
 import { Model } from 'mongoose';
+import { prop, Ref } from '../../data';
 
 export class Virtual extends Model {
   @prop({ required: true })

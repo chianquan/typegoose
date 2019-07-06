@@ -7,7 +7,7 @@ import { Gender, Genders } from '../enums/genders';
 import { Job } from './job';
 import { Role } from '../enums/role';
 import {
-  getModelForClass, mongooseDocument,
+  createModelForClass, mongooseDocument,
   plugin,
   prop,
   Ref,
@@ -101,5 +101,5 @@ export class User extends Model {
 
 }
 
-export const model = getModelForClass(User);
+export const model = createModelForClass(User);
 

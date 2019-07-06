@@ -1,10 +1,9 @@
-import * as mongoose from 'mongoose';
+import { Model } from 'mongoose';
 
-import { prop, Typegoose, pre, post } from '../../typegoose';
+import { prop, pre, post, createModelForClass } from '../../typegoose';
 
 @pre<Dummy>('save', function(next) {
   this.text = 'saved';
-
   next();
 })
 // eslint-disable-next-line only-arrow-functions (need `this` in hook)
@@ -17,9 +16,9 @@ import { prop, Typegoose, pre, post } from '../../typegoose';
 @post<Dummy>('findOne', (result) => {
   result.text = 'changed in post findOne hook';
 })
-export class Dummy extends Typegoose {
+export class Dummy extends Model {
   @prop()
   text: string;
 }
 
-export const model = new Dummy().getModelForClass(Dummy);
+export const model = createModelForClass(Dummy);

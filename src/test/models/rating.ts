@@ -1,6 +1,4 @@
-import { index } from '../..';
-import { Ref } from '../../prop';
-import { getModelForClass, prop } from '../../typegoose';
+import { createModelForClass, index, prop, Ref } from '../../typegoose';
 import { Car } from './car';
 import { User } from './user';
 import { Model } from 'mongoose';
@@ -21,4 +19,4 @@ export class Rating extends Model {
   location: [[number]];
 }
 
-export const model = getModelForClass(Rating);
+export const model = createModelForClass(Rating);

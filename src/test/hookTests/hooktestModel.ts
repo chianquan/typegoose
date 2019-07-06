@@ -1,7 +1,5 @@
-import * as mongoose from 'mongoose';
-
-import { Typegoose, prop, pre } from '../../typegoose';
-
+import { Model } from 'mongoose';
+import { prop, pre, createModelForClass } from '../../typegoose';
 @pre<Hook>('save', function(next) {
   if (this.isModified('shape')) {
     this.shape = 'newShape';
@@ -11,7 +9,7 @@ import { Typegoose, prop, pre } from '../../typegoose';
 
   next();
 })
-export class Hook extends Typegoose {
+export class Hook extends Model {
   @prop({ required: true })
   material: string;
 
@@ -19,4 +17,4 @@ export class Hook extends Typegoose {
   shape?: string;
 }
 
-export const model = new Hook().getModelForClass(Hook);
+export const model = createModelForClass(Hook);

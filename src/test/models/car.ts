@@ -2,7 +2,7 @@ import { Model, Types } from 'mongoose';
 
 import {
   prop,
-  pre, getModelForClass,
+  pre, createModelForClass,
 } from '../../typegoose';
 
 @pre<Car>('save', function(next) {
@@ -25,4 +25,4 @@ export class Car extends Model {
   price: Types.Decimal128;
 }
 
-export const model = getModelForClass(Car);
+export const model = createModelForClass(Car);

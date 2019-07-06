@@ -4,16 +4,12 @@ import 'reflect-metadata';
 import * as mongoose from 'mongoose';
 
 import {
-  hooksMap,
-  pluginsMap,
-  schema, schemaIsLoadedMap,
-  schemaObjMap,
-  schemaOptionsMap,
-  RefType,
+  RefType, getTypegooseData,
 } from './data';
 import { Model, Schema } from 'mongoose';
 
 export * from './data';
+export * from './hooks';
 export type mongooseDocument<T> = T & mongoose.Document;
 
 function isFunction(functionToCheck) {
@@ -25,8 +21,8 @@ export interface GetModelForClassOptions {
   existingConnection?: mongoose.Connection;
 }
 
-export function getModelForClass<T extends new (...args: any) => any>(t: T, { existingMongoose, existingConnection }: GetModelForClassOptions = {}) {
-  const sch = getSchemaForClass(t);
+export function createModelForClass<T extends new (...args: any) => any>(t: T, { existingMongoose, existingConnection }: GetModelForClassOptions = {}) {
+  const sch = createSchemaForClass(t);
   let model = mongoose.model.bind(mongoose);
   if (existingConnection) {
     model = existingConnection.model.bind(existingConnection);
@@ -36,18 +32,19 @@ export function getModelForClass<T extends new (...args: any) => any>(t: T, { ex
   return model(t.name, sch) as mongoose.Model<mongooseDocument<InstanceType<T>>> & T;
 }
 
-export function getSchemaForClass<T>(t: T & (new() => T)): mongoose.Schema {
-  let sch = schemaObjMap.get(t);
+export function createSchemaForClass<T>(t: T & (new() => T)): mongoose.Schema {
+
+  const data = getTypegooseData(t);
+  let sch = data.schema;
   if (!sch) {
     // 提前创建空的schema是为了支持循环引用
-    sch = new mongoose.Schema({}, schemaOptionsMap.get(t));
-    schemaObjMap.set(t, sch);
+    sch = new mongoose.Schema({}, data.schemaOptions);
+    data.schema = sch;
   }
-  const schemaIsLoaded = schemaIsLoadedMap.get(t);
-  if (schemaIsLoaded) {
+  if (data.schemaIsLoaded) {
     return sch;
   }
-  schemaIsLoadedMap.set(t, true);
+  data.schemaIsLoaded = true;
   myLoadClass.call(sch, t);
   sch.loadClass(t);
   return sch;
@@ -61,7 +58,7 @@ function myLoadClass<T>(this: Schema, t: T & (new() => T)) {
     return this;
   }
   myLoadClass.call(this, Object.getPrototypeOf(t));
-  const originSchemaConfig = schema.get(t) || {};
+  const originSchemaConfig = getTypegooseData(t).fieldsArgs;
   for (const key of Object.keys(originSchemaConfig)) {
     const { Type, rawOptions } = originSchemaConfig[key];
     const { isArray: originIsArray, ref: originRef, type: originType, enum: originEnumOption, ...moreRawOptions } = rawOptions;
@@ -107,7 +104,7 @@ function myLoadClass<T>(this: Schema, t: T & (new() => T)) {
       type = Type ? Type : Schema.Types.Mixed;
     }
     if (Model.prototype.isPrototypeOf(type.prototype)) {
-      type = getSchemaForClass(type);
+      type = createSchemaForClass(type);
     }
     const schemaTypeOpt = { ref, type, enum: enumOption, ...moreRawOptions };
     if (schemaTypeOpt.ref === undefined) {
@@ -118,26 +115,21 @@ function myLoadClass<T>(this: Schema, t: T & (new() => T)) {
     }
     this.path(key, isArray ? [schemaTypeOpt] : schemaTypeOpt);
   }
-  const hooks = hooksMap.get(t);
-  if (hooks) {
-    const preHooks = hooks.pre;
-    preHooks.forEach(preHookArgs => {
-      (this as any).pre(...preHookArgs);
-    });
-    const postHooks = hooks.post;
-    postHooks.forEach(postHookArgs => {
-      (this as any).post(...postHookArgs);
-    });
-  }
-  const plugins = pluginsMap.get(t);
-  if (plugins) {
-    for (const plugin of plugins) {
-      this.plugin(plugin.mongoosePlugin, plugin.options);
-    }
+  const hooks = getTypegooseData(t).hooks;
+  const preHooks = hooks.pre;
+  preHooks.forEach(preHookArgs => {
+    (this as any).pre(...preHookArgs);
+  });
+  const postHooks = hooks.post;
+  postHooks.forEach(postHookArgs => {
+    (this as any).post(...postHookArgs);
+  });
+
+  for (const plugin of getTypegooseData(t).plugins) {
+    this.plugin(plugin.mongoosePlugin, plugin.options);
   }
 
-  const indices = Reflect.getMetadata('typegoose:indices', t) || [];
-  for (const index of indices) {
+  for (const index of getTypegooseData(t).indices) {
     this.index(index.fields, index.options);
   }
   return this;

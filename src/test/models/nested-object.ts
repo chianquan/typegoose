@@ -1,5 +1,5 @@
 import { Model } from 'mongoose';
-import { getModelForClass, prop } from '../../typegoose';
+import { createModelForClass, prop } from '../../typegoose';
 
 export class AddressNested extends Model {
   @prop()
@@ -15,4 +15,4 @@ export class PersonNested extends Model {
   moreAddresses: AddressNested[] = [];
 }
 
-export const PersonNestedModel = getModelForClass(PersonNested);
+export const PersonNestedModel = createModelForClass(PersonNested);

@@ -13,42 +13,36 @@ export interface ExtendProp {
 
 /** @format */
 export type MySchemaTypeOpts = SchemaTypeOpts<any> & ExtendProp;
-export const schema: Map<new() => any, { [key: string]: { rawOptions: MySchemaTypeOpts, Type: any } }> = new Map();
-export const hooksMap = new Map();
-export const pluginsMap = new Map();
-export const schemaOptionsMap: Map<new() => any, SchemaOptions> = new Map();
-export const schemaObjMap: Map<new() => any, Schema> = new Map();
-export const schemaIsLoadedMap: Map<new() => any, boolean> = new Map();
 
+interface TypegooseData {
+  fieldsArgs: { [key: string]: { rawOptions: MySchemaTypeOpts, Type: any } };
+  hooks: { pre: any[][], post: any[][] };
+  plugins: { mongoosePlugin, options }[];
+  schemaOptions: SchemaOptions;
+  schema?: Schema;
+  schemaIsLoaded: boolean;
+  indices: { fields, options }[]
+}
 
-/** @format */
+const dataMap: Map<new() => any, TypegooseData> = new Map();
 
-
-const hooks = {
-  pre(...args: Parameters<typeof Schema.prototype.pre>) {
-    return (target: any) => {
-      addToHooks(target.constructor, 'pre', args);
+export function getTypegooseData(t: new() => any): TypegooseData {
+  let data = dataMap.get(t);
+  if (!data) {
+    data = {
+      fieldsArgs: {},
+      hooks: {
+        pre: [], post: [],
+      },
+      plugins: [],
+      schemaOptions: {},
+      schemaIsLoaded: false,
+      indices: [],
     };
-  },
-  post(...args: Parameters<typeof Schema.prototype.post>) {
-    return (target: any) => {
-      addToHooks(target.constructor, 'post', args);
-    };
-  },
-};
-
-const addToHooks = (t: () => any, hookType: 'pre' | 'post', args) => {
-  let hookData = hooksMap.get(t);
-  if (!hookData) {
-    hookData = { pre: [], post: [] };
-    hooksMap.set(t, hookData);
+    dataMap.set(t, data);
   }
-  hookData[hookType].push(args);
-};
-
-export const pre = hooks.pre;
-export const post = hooks.post;
-
+  return data;
+}
 
 import { IndexOptions } from 'mongodb';
 
@@ -58,47 +52,24 @@ import { IndexOptions } from 'mongodb';
  */
 export const index = (fields: any, options?: IndexOptions) => {
   return (constructor: any) => {
-    const indices = Reflect.getMetadata('typegoose:indices', constructor) || [];
-    indices.push({ fields, options });
-    Reflect.defineMetadata('typegoose:indices', indices, constructor);
+    getTypegooseData(constructor).indices.push({ fields, options });
   };
 };
 
-
-/** @format */
-
-
 export const plugin = (mongoosePlugin: any, options?: any) => (target: any) => {
-  let plugins = pluginsMap.get(target.constructor);
-  if (!plugins) {
-    plugins = [];
-    pluginsMap.set(target.constructor, plugins);
-  }
-  plugins.push({ mongoosePlugin, options });
+  getTypegooseData(target).plugins.push({ mongoosePlugin, options });
 };
-
-
-/** @format */
 
 import { MySchemaTypeOpts } from './data';
 import { ObjectID } from 'bson';
 
 export const prop = (options: MySchemaTypeOpts = {}) => (target: any, key: string) => {
   const Type = (Reflect as any).getMetadata('design:type', target, key);
-  let fieldConfig = schema.get(target.constructor);
-  if (!fieldConfig) {
-    fieldConfig = {};
-    schema.set(target.constructor, fieldConfig);
-  }
-  fieldConfig[key] = { rawOptions: options, Type };
-  return;
+  getTypegooseData(target.constructor).fieldsArgs[key] = { rawOptions: options, Type };
 };
 
 export type Ref<T> = T | ObjectID;
 
-
-/** @format */
-
 export const schemaOptions = (options: SchemaOptions) => (target: any) => {
-  schemaOptionsMap.set(target, options);
+  getTypegooseData(target).schemaOptions = options;
 };

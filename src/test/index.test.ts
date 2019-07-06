@@ -9,10 +9,15 @@ import { PersonNested, AddressNested, PersonNestedModel } from './models/nested-
 import { Genders } from './enums/genders';
 import { Role } from './enums/role';
 import { initDatabase, closeDatabase } from './utils/mongoConnect';
-import { getClassForDocument } from '../utils';
 import { fail } from 'assert';
 import { Virtual, VirtualSub } from './models/virtualprop';
 import { ObjectID } from 'bson';
+import { createModelForClass } from '../typegoose';
+
+export function getClassForDocument(document: mongoose.Document) {
+  return User;
+}
+
 
 describe('Typegoose', () => {
   before(() => initDatabase());
@@ -190,8 +195,8 @@ describe('Typegoose', () => {
   });
 
   it('should add and populate the virtual properties', async () => {
-    const virtualModel = new Virtual().getModelForClass(Virtual);
-    const virtualSubModel = new VirtualSub().getModelForClass(VirtualSub);
+    const virtualModel = createModelForClass(Virtual);
+    const virtualSubModel = createModelForClass(VirtualSub);
 
     const virtual1 = await new virtualModel({ dummyVirtual: 'dummyVirtual1' } as Virtual).save();
     const virtualsub1 = await new virtualSubModel({ dummy: 'virtualSub1', virtual: virtual1._id } as VirtualSub).save();
