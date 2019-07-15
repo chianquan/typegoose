@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 import * as mongoose from 'mongoose';
 
-import { model as User, User as UserType } from './models/user';
-import { model as Car, Car as CarType } from './models/car';
-import { model as Person } from './models/person';
-import { model as Rating } from './models/rating';
+import { UserModel, User } from './models/user';
+import { CarModel, Car } from './models/car';
+import { PersonModel } from './models/person';
+import { RatingModel } from './models/rating';
 import { PersonNested, AddressNested, PersonNestedModel } from './models/nested-object';
 import { Genders } from './enums/genders';
 import { Role } from './enums/role';
@@ -15,7 +15,19 @@ import { ObjectID } from 'bson';
 import { createModelForClass } from '../typegoose';
 
 export function getClassForDocument(document: mongoose.Document) {
-  return User;
+  return UserModel;
+}
+
+interface aa {
+  _id?: string;
+}
+
+interface bb {
+  aa?: aa;
+}
+
+interface cc {
+  bb?: bb;
 }
 
 
@@ -24,22 +36,21 @@ describe('Typegoose', () => {
 
   after(() => closeDatabase());
 
-  it('should create a User with connections', async () => {
-    const car = await Car.create({
+  it('should create a UserModel with connections', async () => {
+    const car = await CarModel.create({
       model: 'Tesla',
       version: 'ModelS',
       price: mongoose.Types.Decimal128.fromString('50123.25'),
     });
 
-    const [trabant, zastava] = await Car.create([{
+    const [trabant, zastava] = await CarModel.create([{
       model: 'Trabant',
       price: mongoose.Types.Decimal128.fromString('28189.25'),
     }, {
       model: 'Zastava',
       price: mongoose.Types.Decimal128.fromString('1234.25'),
     }]);
-
-    const user = await User.create({
+    const user = await UserModel.create({
       _id: mongoose.Types.ObjectId(),
       firstName: 'John',
       lastName: 'Doe',
@@ -66,11 +77,11 @@ describe('Typegoose', () => {
     });
 
     {
-      const foundUser = await User
+      const foundUser = await UserModel
         .findById(user.id)
         .populate('car previousCars')
         .exec();
-
+      foundUser.job.position = 'new ';
       expect(foundUser).to.have.property('nick', 'Nothing');
       expect(foundUser).to.have.property('firstName', 'John');
       expect(foundUser).to.have.property('lastName', 'Doe');
@@ -118,13 +129,13 @@ describe('Typegoose', () => {
     }
 
     {
-      const foundUser = await User.findByAge(21);
+      const foundUser = await UserModel.findByAge(21);
       expect(foundUser).to.have.property('firstName', 'Sherlock');
       expect(foundUser).to.have.property('lastName', 'Holmes');
     }
 
     {
-      const createdUser = await User.findOrCreate({
+      const createdUser = await UserModel.findOrCreate({
         firstName: 'Jane',
         lastName: 'Doe',
         gender: Genders.FEMALE,
@@ -136,7 +147,7 @@ describe('Typegoose', () => {
       expect(createdUser).to.have.property('doc');
       expect(createdUser.doc).to.have.property('firstName', 'Jane');
 
-      const foundUser = await User.findOrCreate({
+      const foundUser = await UserModel.findOrCreate({
         firstName: 'Jane',
         lastName: 'Doe',
       });
@@ -148,7 +159,7 @@ describe('Typegoose', () => {
       expect(foundUser.doc).to.have.property('firstName', 'Jane');
 
       try {
-        await User.create({
+        await UserModel.create({
           _id: mongoose.Types.ObjectId(),
           firstName: 'John',
           lastName: 'Doe',
@@ -163,7 +174,7 @@ describe('Typegoose', () => {
   });
 
   it('should add a language and job using instance methods', async () => {
-    const user = await User.create({
+    const user = await UserModel.create({
       firstName: 'harry',
       lastName: 'potter',
       gender: Genders.MALE,
@@ -182,13 +193,13 @@ describe('Typegoose', () => {
   });
 
   it('should add compound index', async () => {
-    const user = await User.findOne();
-    const car = await Car.findOne();
+    const user = await UserModel.findOne();
+    const car = await CarModel.findOne();
 
-    await Rating.create({ user: user._id, car: car._id, stars: 4 });
+    await RatingModel.create({ user: user._id, car: car._id, stars: 4 });
 
     // should fail, because user and car should be unique
-    const created = await Rating.create({ user: user._id, car: car._id, stars: 5 })
+    const created = await RatingModel.create({ user: user._id, car: car._id, stars: 5 })
       .then(() => true).catch(() => false);
 
     expect(created).to.be.false;
@@ -222,14 +233,14 @@ describe('getClassForDocument()', () => {
   before(() => initDatabase());
 
   it('should return correct class type for document', async () => {
-    const car = await Car.create({
+    const car = await CarModel.create({
       model: 'Tesla',
       price: mongoose.Types.Decimal128.fromString('50123.25'),
     });
     const carReflectedType = getClassForDocument(car);
-    expect(carReflectedType).to.equals(CarType);
+    expect(carReflectedType).to.equals(Car);
 
-    const user = await User.create({
+    const user = await UserModel.create({
       _id: mongoose.Types.ObjectId(),
       firstName: 'John2',
       lastName: 'Doe2',
@@ -237,44 +248,44 @@ describe('getClassForDocument()', () => {
       languages: ['english2', 'typescript2'],
     });
     const userReflectedType = getClassForDocument(user);
-    expect(userReflectedType).to.equals(UserType);
+    expect(userReflectedType).to.equals(User);
 
     // assert negative to be sure (false positive)
-    expect(carReflectedType).to.not.equals(UserType);
-    expect(userReflectedType).to.not.equals(CarType);
+    expect(carReflectedType).to.not.equals(User);
+    expect(userReflectedType).to.not.equals(Car);
   });
 
   it('should use inherited schema', async () => {
-    let user = await Person.create({
+    let user = await PersonModel.create({
       email: 'my@email.com',
     });
 
-    const car = await Car.create({
+    const car = await CarModel.create({
       model: 'Tesla',
       price: mongoose.Types.Decimal128.fromString('50123.25'),
     });
 
     await user.addCar(car);
 
-    user = await Person.findById(user.id).populate('cars');
+    user = await PersonModel.findById(user.id).populate('cars');
 
     // verify properties
     expect(user).to.have.property('createdAt');
     expect(user).to.have.property('email', 'my@email.com');
 
     expect(user.cars.length).to.be.above(0);
-    user.cars.map((currentCar: CarType) => {
+    user.cars.map((currentCar: Car) => {
       expect(currentCar.model).to.be.ok;
     });
 
     // verify methods
-    expect(user.getClassName()).to.equals('Person');
-    expect(Person.getStaticName()).to.equals('Person');
+    expect(user.getClassName()).to.equals('PersonModel');
+    expect(PersonModel.getStaticName()).to.equals('PersonModel');
   });
 
   it('Should store nested address', async () => {
     const personInput = new PersonNested();
-    personInput.name = 'Person, Some';
+    personInput.name = 'PersonModel, Some';
     personInput.address = new AddressNested('A Street 1');
     personInput.moreAddresses = [
       new AddressNested('A Street 2'),
@@ -284,7 +295,7 @@ describe('getClassForDocument()', () => {
     const person = await PersonNestedModel.create(personInput);
 
     expect(person).is.not.undefined;
-    expect(person.name).equals('Person, Some');
+    expect(person.name).equals('PersonModel, Some');
     expect(person.address).is.not.undefined;
     expect(person.address.street).equals('A Street 1');
     expect(person.moreAddresses).is.not.undefined;
@@ -296,7 +307,7 @@ describe('getClassForDocument()', () => {
   // faild validation will need to be checked
   it('Should validate Decimal128', async () => {
     try {
-      await Car.create({
+      await CarModel.create({
         model: 'Tesla',
         price: 'NO DECIMAL',
       });
@@ -306,18 +317,18 @@ describe('getClassForDocument()', () => {
 
       expect(e).to.be.a.instanceof((mongoose.Error as any).ValidationError);
     }
-    const car = await Car.create({
+    const car = await CarModel.create({
       model: 'Tesla',
       price: mongoose.Types.Decimal128.fromString('123.45'),
     });
-    const foundCar = await Car.findById(car._id).exec();
+    const foundCar = await CarModel.findById(car._id).exec();
     expect(foundCar.price).to.be.a.instanceof(mongoose.Types.Decimal128);
     expect(foundCar.price.toString()).to.eq('123.45');
   });
 
   it('Should validate email', async () => {
     try {
-      await Person.create({
+      await PersonModel.create({
         email: 'email',
       });
       fail('Validation must fail.');

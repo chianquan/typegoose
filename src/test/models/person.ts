@@ -15,13 +15,13 @@ export class Person extends PersistentModel {
 
   // override instanceMethod
   getClassName() {
-    return 'Person';
+    return 'PersonModel';
   }
 
   // override staticMethod
   static getStaticName() {
-    return 'Person';
+    return 'PersonModel';
   }
 }
 
-export const model = createModelForClass(Person);
+export const PersonModel = createModelForClass(Person);

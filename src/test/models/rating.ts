@@ -19,4 +19,4 @@ export class Rating extends Model {
   location: [[number]];
 }
 
-export const model = createModelForClass(Rating);
+export const RatingModel = createModelForClass(Rating);

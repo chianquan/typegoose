@@ -101,5 +101,5 @@ export class User extends Model {
 
 }
 
-export const model = createModelForClass(User);
+export const UserModel = createModelForClass(User);
 

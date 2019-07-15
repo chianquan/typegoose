@@ -25,4 +25,4 @@ export class Car extends Model {
   price: Types.Decimal128;
 }
 
-export const model = createModelForClass(Car);
+export const CarModel = createModelForClass(Car);

@@ -422,9 +422,9 @@ class Car extends Typegoose {
 }
 ```
 
-This will execute the pre-save hook each time a `Car` document is saved. Inside the pre-hook Mongoose binds the actual document to `this`.
+This will execute the pre-save hook each time a `CarModel` document is saved. Inside the pre-hook Mongoose binds the actual document to `this`.
 
-Note that additional typing information is required either by passing the class itself as a type parameter `<Car>` or explicity telling TypeScript that `this` is a `Car` (`this: Car`). This will grant typing informations inside the hook function.
+Note that additional typing information is required either by passing the class itself as a type parameter `<CarModel>` or explicity telling TypeScript that `this` is a `CarModel` (`this: CarModel`). This will grant typing informations inside the hook function.
 
 #### post
 
