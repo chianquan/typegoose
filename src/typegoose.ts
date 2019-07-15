@@ -1,14 +1,7 @@
-/** @format */
-
 import 'reflect-metadata';
-
 import { Model, Schema, SchemaOptions, SchemaTypeOpts, Document } from 'mongoose';
 import * as mongoose from 'mongoose';
-
-/** @format */
-
 import { MongooseDocument } from 'mongoose';
-
 
 type DocumentMethod = 'init' | 'validate' | 'save' | 'remove';
 type QueryMethod =
@@ -21,31 +14,21 @@ type QueryMethod =
   | 'updateOne'
   | 'updateMany';
 type ModelMethod = 'insertMany';
-
 type ClassDecorator = (constructor: any) => void;
 type HookNextFn = (err?: Error) => void;
-
 type PreDoneFn = () => void;
-
 type TypegooseDoc<T> = T & MongooseDocument;
-
 type DocumentPreSerialFn<T> = (this: TypegooseDoc<T>, next: HookNextFn) => void;
 type DocumentPreParallelFn<T> = (this: TypegooseDoc<T>, next: HookNextFn, done: PreDoneFn) => void;
-
 type SimplePreSerialFn<T> = (next: HookNextFn, docs?: any[]) => void;
 type SimplePreParallelFn<T> = (next: HookNextFn, done: PreDoneFn) => void;
-
-type DocumentPostFn<T> = (this: TypegooseDoc<T>, doc: TypegooseDoc<T>, next?: HookNextFn) => void;
 type ModelPostFn<T> = (result: any, next?: HookNextFn) => void;
-
 type PostNumberResponse<T> = (result: number, next?: HookNextFn) => void;
 type PostSingleResponse<T> = (result: TypegooseDoc<T>, next?: HookNextFn) => void;
 type PostMultipleResponse<T> = (result: TypegooseDoc<T>[], next?: HookNextFn) => void;
-
 type PostNumberWithError<T> = (error: Error, result: number, next: HookNextFn) => void;
 type PostSingleWithError<T> = (error: Error, result: TypegooseDoc<T>, next: HookNextFn) => void;
 type PostMultipleWithError<T> = (error: Error, result: TypegooseDoc<T>[], net: HookNextFn) => void;
-
 type NumberMethod = 'count';
 type SingleMethod = 'findOne' | 'findOneAndRemove' | 'findOneAndUpdate' | DocumentMethod;
 type MultipleMethod = 'find' | 'update';
@@ -112,7 +95,6 @@ export interface ExtendProp {
 
 }
 
-/** @format */
 export type MySchemaTypeOpts = SchemaTypeOpts<any> & ExtendProp;
 
 interface TypegooseData {
