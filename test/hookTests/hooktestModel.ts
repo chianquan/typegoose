@@ -1,5 +1,5 @@
 import { Model } from 'mongoose';
-import { prop, pre, createModelForClass } from '../../typegoose';
+import { prop, pre, createModelForClass } from '../../src/typegoose';
 @pre<Hook>('save', function(next) {
   if (this.isModified('shape')) {
     this.shape = 'newShape';

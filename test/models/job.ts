@@ -1,6 +1,7 @@
 import { Model } from 'mongoose';
-import { prop } from '../../typegoose';
+import { prop, schemaOptions } from '../../src/typegoose';
 
+@schemaOptions({ _id: false })
 export class JobType extends Model {
   @prop({ required: true })
   field: string;
@@ -19,7 +20,7 @@ export class Job extends Model {
   @prop({ required: true, default: Date.now })
   startedAt?: Date;
 
-  @prop({ _id: false })
+  @prop()
   jobType?: JobType;
 
   titleInUppercase?() {

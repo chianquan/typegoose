@@ -1,6 +1,6 @@
 {
   "name": "@pagoda/typegoose",
-  "version": "5.7.2",
+  "version": "0.0.1",
   "description": "Define Mongoose models using TypeScript classes.",
   "main": "lib/typegoose.js",
   "files": [
@@ -9,12 +9,10 @@
   ],
   "scripts": {
     "start": "npm run build && node ./lib/typegoose.js",
-    "one": "node $NODE_DEBUG_OPTION --require ts-node/register ./src/one.ts",
-    "onejs": "npm run build&&node $NODE_DEBUG_OPTION ./lib/one.js",
     "build": "rimraf lib && tsc",
     "lint": "tslint --project tsconfig.json",
     "test": "npm run lint && nyc npm run mocha",
-    "mocha": "npm run build && mocha ./lib --recursive --exit",
+    "mocha": "npm run build && mocha  $NODE_DEBUG_OPTION ./lib --recursive --exit",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
   "repository": {

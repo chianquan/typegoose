@@ -12,10 +12,10 @@ import { initDatabase, closeDatabase } from './utils/mongoConnect';
 import { fail } from 'assert';
 import { Virtual, VirtualSub } from './models/virtualprop';
 import { ObjectID } from 'bson';
-import { createModelForClass } from '../typegoose';
+import { createModelForClass } from '../src/typegoose';
 
-export function getClassForDocument(document: mongoose.Document) {
-  return UserModel;
+export function getModelNameFromDocument(document: mongoose.Document) {
+  return (document.constructor as mongoose.Model<typeof document>).modelName;
 }
 
 interface aa {
@@ -74,14 +74,14 @@ describe('Typegoose', () => {
         title: 'Manager',
       }],
       previousCars: [trabant.id, zastava.id],
+      previousCarsBak: [trabant.id, zastava.id],
     });
 
     {
       const foundUser = await UserModel
         .findById(user.id)
-        .populate('car previousCars')
+        .populate('car previousCars previousCarsBak')
         .exec();
-      foundUser.job.position = 'new ';
       expect(foundUser).to.have.property('nick', 'Nothing');
       expect(foundUser).to.have.property('firstName', 'John');
       expect(foundUser).to.have.property('lastName', 'Doe');
@@ -229,7 +229,7 @@ describe('Typegoose', () => {
   });
 });
 
-describe('getClassForDocument()', () => {
+describe('getModelNameFromDocument()', () => {
   before(() => initDatabase());
 
   it('should return correct class type for document', async () => {
@@ -237,8 +237,8 @@ describe('getClassForDocument()', () => {
       model: 'Tesla',
       price: mongoose.Types.Decimal128.fromString('50123.25'),
     });
-    const carReflectedType = getClassForDocument(car);
-    expect(carReflectedType).to.equals(Car);
+    const carReflectedType = getModelNameFromDocument(car);
+    expect(carReflectedType).to.equals('car');
 
     const user = await UserModel.create({
       _id: mongoose.Types.ObjectId(),
@@ -247,12 +247,8 @@ describe('getClassForDocument()', () => {
       gender: Genders.MALE,
       languages: ['english2', 'typescript2'],
     });
-    const userReflectedType = getClassForDocument(user);
-    expect(userReflectedType).to.equals(User);
-
-    // assert negative to be sure (false positive)
-    expect(carReflectedType).to.not.equals(User);
-    expect(userReflectedType).to.not.equals(Car);
+    const userReflectedType = getModelNameFromDocument(user);
+    expect(userReflectedType).to.equals('user');
   });
 
   it('should use inherited schema', async () => {
@@ -284,15 +280,20 @@ describe('getClassForDocument()', () => {
   });
 
   it('Should store nested address', async () => {
-    const personInput = new PersonNested();
-    personInput.name = 'PersonModel, Some';
-    personInput.address = new AddressNested('A Street 1');
-    personInput.moreAddresses = [
-      new AddressNested('A Street 2'),
-      new AddressNested('A Street 3'),
-    ];
-
-    const person = await PersonNestedModel.create(personInput);
+    const person = await PersonNestedModel.create({
+      name: 'PersonModel, Some',
+      address: {
+        street: 'A Street 1',
+      },
+      moreAddresses: [
+        {
+          street: 'A Street 2',
+        },
+        {
+          street: 'A Street 3',
+        },
+      ],
+    });
 
     expect(person).is.not.undefined;
     expect(person.name).equals('PersonModel, Some');

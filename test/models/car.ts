@@ -3,7 +3,7 @@ import { Model, Types } from 'mongoose';
 import {
   prop,
   pre, createModelForClass,
-} from '../../typegoose';
+} from '../../src/typegoose';
 
 @pre<Car>('save', function(next) {
   if (this.model === 'Trabant') {

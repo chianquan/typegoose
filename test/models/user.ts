@@ -11,7 +11,7 @@ import {
   plugin,
   prop,
   Ref,
-} from '../../typegoose';
+} from '../../src/typegoose';
 
 export interface FindOrCreateResult<T> {
   created: boolean;
@@ -57,22 +57,22 @@ export class User extends Model {
   @prop({ enum: Role })
   role: Role;
 
-  @prop({ type: String, enum: Role, default: Role.Guest })
+  @prop({ type: () => String, default: Role.Guest })
   roles: Role[];
 
   @prop()
   job?: Job;
 
-  @prop({ ref: Car })
+  @prop({ ref: () => Car })
   car?: Ref<Car>;
 
-  @prop({ type: String, required: true })
+  @prop({ type: () => String, required: true })
   languages: string[];
 
   @prop({ type: () => Job })
   previousJobs?: Job[];
 
-  @prop({ ref: Car })
+  @prop({ ref: () => Car })
   previousCars?: Ref<Car>[];
 
   static findByAge(age: number) {

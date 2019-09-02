@@ -1,4 +1,4 @@
-import { createModelForClass, index, prop, Ref } from '../../typegoose';
+import { createModelForClass, index, prop, Ref } from '../../src/typegoose';
 import { Car } from './car';
 import { User } from './user';
 import { Model } from 'mongoose';
@@ -6,16 +6,16 @@ import { Model } from 'mongoose';
 @index({ car: 1, user: 1 }, { unique: true })
 @index({ location: '2dsphere' })
 export class Rating extends Model {
-  @prop({ ref: Car })
+  @prop({ ref: () => Car })
   car: Ref<Car>;
 
-  @prop({ ref: User })
+  @prop({ ref: () => User })
   user: Ref<User>;
 
   @prop()
   stars: number;
 
-  @prop({ type: Array })
+  @prop({ type: () => Array })
   location: [[number]];
 }
 

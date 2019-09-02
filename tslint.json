@@ -12,11 +12,16 @@
     "ordered-imports": false,
     "interface-name": false,
     "object-literal-sort-keys": false,
+    "class-name": false,
     "member-access": false,
     "array-type": false,
     "member-ordering": false,
     "no-unused-expression": false,
-    "whitespace": [true, "check-module"],
+    "whitespace": [
+      true,
+      "check-module"
+    ],
+    "no-console": false,
     "no-var-requires": false
   },
   "rulesDirectory": []

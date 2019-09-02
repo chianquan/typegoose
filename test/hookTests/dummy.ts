@@ -1,6 +1,6 @@
 import { Model } from 'mongoose';
 
-import { prop, pre, post, createModelForClass } from '../../typegoose';
+import { prop, pre, post, createModelForClass } from '../../src/typegoose';
 
 @pre<Dummy>('save', function(next) {
   this.text = 'saved';

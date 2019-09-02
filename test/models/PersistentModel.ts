@@ -1,7 +1,7 @@
-import * as tg from '../../typegoose';
+import * as tg from '../../src/typegoose';
 import { Car } from './car';
 import { Model } from 'mongoose';
-import { prop, Ref } from '../../typegoose';
+import { prop, Ref } from '../../src/typegoose';
 
 export abstract class PersistentModel extends Model {
   @prop()
