@@ -201,7 +201,7 @@ export function createModelForClass<T extends new (...args: any) => any>(t: T, {
   return model(config.modelNameFun(t), sch) as Model<mongooseDocument<InstanceType<T>>> & T;
 }
 
-export function createSchemaForClass<T>(t: T & (new() => T)): Schema {
+export function createSchemaForClass<T extends new (...args: any) => any>(t: T): Schema {
 
   const data = getTypegooseData(t);
   let sch = data.schema;

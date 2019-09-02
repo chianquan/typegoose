@@ -1,7 +1,7 @@
 {
   "name": "@pagoda/typegoose",
   "version": "0.0.1",
-  "description": "Define Mongoose models using TypeScript classes.",
+  "description": "It's pagoda company customized version of typegoose. Define Mongoose models using TypeScript classes.",
   "main": "lib/typegoose.js",
   "files": [
     "lib/*.js",
@@ -12,7 +12,7 @@
     "build": "rimraf lib && tsc",
     "lint": "tslint --project tsconfig.json",
     "test": "npm run lint && nyc npm run mocha",
-    "mocha": "npm run build && mocha  $NODE_DEBUG_OPTION ./lib --recursive --exit",
+    "mocha": "npm run build && mocha ./lib --recursive --exit",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
   "repository": {
@@ -21,7 +21,7 @@
   },
   "types": "lib/typegoose.d.ts",
   "typings": "lib/typegoose.d.ts",
-  "author": "Akos Szokodi <akos@codingsans.com> (http://codingsans.com)",
+  "author": "chianquan",
   "license": "MIT",
   "peerDependencies": {
     "mongoose": "^5.5.13"

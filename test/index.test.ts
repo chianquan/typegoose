@@ -12,24 +12,19 @@ import { initDatabase, closeDatabase } from './utils/mongoConnect';
 import { fail } from 'assert';
 import { Virtual, VirtualSub } from './models/virtualprop';
 import { ObjectID } from 'bson';
-import { createModelForClass } from '../src/typegoose';
+import {
+  createModelForClass,
+  createSchemaForClass,
+  mongooseDocument,
+  prop,
+  Ref,
+  schemaOptions,
+} from '../src/typegoose';
+import { Model, Schema, Types } from 'mongoose';
 
 export function getModelNameFromDocument(document: mongoose.Document) {
   return (document.constructor as mongoose.Model<typeof document>).modelName;
 }
-
-interface aa {
-  _id?: string;
-}
-
-interface bb {
-  aa?: aa;
-}
-
-interface cc {
-  bb?: bb;
-}
-
 
 describe('Typegoose', () => {
   before(() => initDatabase());
@@ -336,5 +331,121 @@ describe('getModelNameFromDocument()', () => {
     } catch (e) {
       expect(e).to.be.a.instanceof((mongoose.Error as any).ValidationError);
     }
+  });
+});
+
+describe('pagoda new features', () => {
+  before(() => initDatabase());
+  it('should support recursive nesting schema.', async () => {
+    class Box extends Model {
+      @prop({ type: () => Box })
+      innerBoxes: Box[];
+      @prop()
+      name: string;
+    }
+
+    const BoxModel = createModelForClass(Box);
+    const bigBox = new BoxModel({
+      innerBoxes: [
+        {
+          innerBoxes: [{
+            innerBoxes: [],
+            name: 'the smallest box',
+          } as Box],
+          name: 'the middle box1',
+        } as Box,
+        {
+          innerBoxes: [],
+          name: 'the middle box2',
+        } as Box,
+      ],
+      name: 'the biggest box',
+    } as Box);
+    const returnBox = await bigBox.save();
+    expect(returnBox).to.have.property('name').to.equal('the biggest box');
+    expect(returnBox).to.have.property('innerBoxes').to.have.length(2);
+    expect(returnBox.innerBoxes[0]).to.have.property('name').to.equal('the middle box1');
+    expect(returnBox.innerBoxes[0]).to.have.property('innerBoxes').to.have.length(1);
+    expect(returnBox.innerBoxes[1]).to.have.property('name').to.equal('the middle box2');
+    expect(returnBox.innerBoxes[1]).to.have.property('innerBoxes').to.have.length(0);
+    expect(returnBox.innerBoxes[0].innerBoxes[0]).to.have.property('name').to.equal('the smallest box');
+    expect(returnBox.innerBoxes[0].innerBoxes[0]).to.have.property('innerBoxes').to.have.length(0);
+  });
+  it('should support refpath', async () => {
+    class Cock extends Model {
+      @prop()
+      name: string;
+
+      get legCount() {
+        return 2;
+      }
+    }
+
+    class Rabbit extends Model {
+      @prop()
+      name: string;
+
+      get legCount() {
+        return 4;
+      }
+    }
+
+    @schemaOptions({ _id: false })
+    class AnimalInCage extends Model {
+      @prop()
+      type: string;
+      @prop({
+        refPath: 'animals.type', type: () => Schema.Types.ObjectId,
+      })
+      id: Schema.Types.ObjectId | mongooseDocument<Cock> | mongooseDocument<Rabbit>;
+    }
+
+    class Cage extends Model {
+      @prop({ type: () => AnimalInCage })
+      animals: AnimalInCage[];
+    }
+
+    const CockModel = createModelForClass(Cock);
+    const RabbitModel = createModelForClass(Rabbit);
+    const CageModel = createModelForClass(Cage);
+    const cockInfo = await CockModel.create({
+      name: 'xiao hua',
+    } as Cock);
+    const rabbitInfo = await RabbitModel.create({ name: 'xiao bai' } as Rabbit);
+    const cageInfo = await CageModel.create({
+      animals: [
+        { type: 'cock', id: cockInfo._id },
+        { type: 'rabbit', id: rabbitInfo._id },
+      ],
+    } as Cage);
+    const retCageInfo = await CageModel.findById(cageInfo._id).populate('animals.id');
+    expect(retCageInfo)
+      .to.be.ok
+      .to.have.property('animals')
+      .to.have.length(2);
+    expect(retCageInfo.animals[0]).to.have.property('type')
+      .to.be.equal('cock');
+    expect(retCageInfo.animals[1]).to.have.property('type')
+      .to.be.equal('rabbit');
+    expect(retCageInfo.animals[0]).to.not.have.property('_id');
+    expect(retCageInfo.animals[1]).to.not.have.property('_id');
+    expect(retCageInfo.animals[0]).to.have.property('id').to.have.property('name').to.equal('xiao hua');
+    expect(retCageInfo.animals[1]).to.have.property('id').to.have.property('name').to.equal('xiao bai');
+    expect((retCageInfo.animals[0].id as Cock).legCount).to.equal(2);
+    expect((retCageInfo.animals[1].id as Rabbit).legCount).to.equal(4);
+  });
+
+  it('should support defined type free.', async () => {
+    class Tmp1 extends Model {
+      @prop({ type: () => Schema.Types.ObjectId })
+      commonId: Ref<Tmp1>;
+    }
+
+    const Tmp1Schema = createSchemaForClass(Tmp1);
+    const commonIdPath = Tmp1Schema.path('commonId');
+    expect(commonIdPath).to.be.ok
+      .to.have.property('options')
+      .to.have.property('type')
+      .to.be.equal(Schema.Types.ObjectId);
   });
 });
