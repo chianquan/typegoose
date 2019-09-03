@@ -89,7 +89,7 @@ const hooks: Hooks = {
   },
 };
 
-const addToHooks = (t: new() => any, hookType: 'pre' | 'post', args) => {
+const addToHooks = <T>(t: T & typeof Model, hookType: 'pre' | 'post', args) => {
   const data = getTypegooseData(t);
   data.hooks[hookType].push(args);
 };
@@ -123,9 +123,9 @@ interface TypegooseData {
   indices: Array<{ fields, options }>;
 }
 
-const dataMap: Map<new() => any, TypegooseData> = new Map();
+const dataMap: Map<Model<any>, TypegooseData> = new Map();
 
-export function getTypegooseData(t: new() => any): TypegooseData {
+export function getTypegooseData<T>(t: T & typeof Model): TypegooseData {
   let data = dataMap.get(t);
   if (!data) {
     data = {
@@ -176,7 +176,7 @@ export interface GetModelForClassOptions {
 }
 
 const config = {
-  modelNameFun: (t: new() => any): string => {
+  modelNameFun: <T>(t: T & typeof Model): string => {
     return t.name.replace(/^\S/, (s) => s.toLowerCase());
   },
 };
@@ -190,7 +190,7 @@ export function typegooseConfig<K extends keyof typeof config>(key: K, value?: (
   }
 }
 
-export function createModelForClass<T extends new (...args: any) => any>(t: T, { existingMongoose, existingConnection }: GetModelForClassOptions = {}) {
+export function createModelForClass<T>(t: T & typeof Model, { existingMongoose, existingConnection }: GetModelForClassOptions = {}): T {
   const sch = createSchemaForClass(t);
   let model = mongooseModel.bind(mongoose);
   if (existingConnection) {
@@ -198,10 +198,10 @@ export function createModelForClass<T extends new (...args: any) => any>(t: T, {
   } else if (existingMongoose) {
     model = existingMongoose.model.bind(existingMongoose);
   }
-  return model(config.modelNameFun(t), sch) as Model<mongooseDocument<InstanceType<T>>> & T;
+  return model(config.modelNameFun(t), sch);
 }
 
-export function createSchemaForClass<T extends new (...args: any) => any>(t: T): Schema {
+export function createSchemaForClass<T>(t: T & typeof Model): Schema {
 
   const data = getTypegooseData(t);
   let sch = data.schema;
@@ -220,7 +220,7 @@ export function createSchemaForClass<T extends new (...args: any) => any>(t: T):
 }
 
 // 补充mongoose 的loadClass
-function myLoadClass<T>(this: Schema, t: T & (new() => T)) {
+function myLoadClass<T>(this: Schema, t: T & typeof Model) {
   if (t === Object.prototype ||
     t === Function.prototype ||
     t.prototype.hasOwnProperty('$isMongooseModelPrototype')) {

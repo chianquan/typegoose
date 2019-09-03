@@ -18,7 +18,7 @@ import {
   mongooseDocument,
   prop,
   Ref,
-  schemaOptions,
+  schemaOptions, typegooseConfig,
 } from '../src/typegoose';
 import { Model, Schema, Types } from 'mongoose';
 
@@ -393,7 +393,7 @@ describe('pagoda new features', () => {
     @schemaOptions({ _id: false })
     class AnimalInCage extends Model {
       @prop()
-      type: string;
+      type: string; // Here,we depend the model name create by default lowerFirst.
       @prop({
         refPath: 'animals.type', type: () => Schema.Types.ObjectId,
       })
@@ -436,6 +436,7 @@ describe('pagoda new features', () => {
   });
 
   it('should support defined type free.', async () => {
+
     class Tmp1 extends Model {
       @prop({ type: () => Schema.Types.ObjectId })
       commonId: Ref<Tmp1>;
@@ -447,5 +448,24 @@ describe('pagoda new features', () => {
       .to.have.property('options')
       .to.have.property('type')
       .to.be.equal(Schema.Types.ObjectId);
+  });
+  it('should support config the model name rule.', async () => {
+    class Abc extends Model {
+
+    }
+
+    const abcModel = createModelForClass(Abc);
+    expect(abcModel.modelName).to.equal('abc');
+
+    class A extends Model {
+
+    }
+
+    const originModelFun = typegooseConfig('modelNameFun');
+    typegooseConfig('modelNameFun', (t) => t.name + '_hello');
+
+    const aModel = createModelForClass(A);
+    expect(aModel.modelName).equal('A_hello');
+    typegooseConfig('modelNameFun', originModelFun);
   });
 });
