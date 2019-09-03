@@ -1,7 +1,7 @@
 {
   "name": "@pagoda/typegoose",
   "version": "0.0.1",
-  "description": "It's pagoda company customized version of typegoose. Define Mongoose models using TypeScript classes.",
+  "description": "It's PAGODA company customized version of typegoose. Define Mongoose models using TypeScript classes.",
   "main": "lib/typegoose.js",
   "files": [
     "lib/*.js",
@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/szokodiakos/typegoose.git"
+    "url": "https://github.com/chianquan/typegoose.git"
   },
   "types": "lib/typegoose.d.ts",
   "typings": "lib/typegoose.d.ts",
@@ -45,10 +45,10 @@
     "rimraf": "2.6.2",
     "tslint": "5.17.0",
     "tslint-config-prettier": "1.18.0",
+    "ts-node": "^8.3.0",
     "typescript": "3.5.1"
   },
   "dependencies": {
-    "reflect-metadata": "^0.1.13",
-    "ts-node": "^8.3.0"
+    "reflect-metadata": "^0.1.13"
   }
 }
