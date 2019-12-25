@@ -17,10 +17,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/chianquan/typegoose.git"
+    "url": "git+https://github.com/chianquan/typegoose.git"
   },
-  "types": "lib/typegoose.d.ts",
-  "typings": "lib/typegoose.d.ts",
+  "types": "lib/src/typegoose.d.ts",
+  "typings": "lib/src/typegoose.d.ts",
   "author": "chianquan",
   "license": "MIT",
   "peerDependencies": {
@@ -50,5 +50,16 @@
   },
   "dependencies": {
     "reflect-metadata": "^0.1.13"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/chianquan/typegoose/issues"
+  },
+  "homepage": "https://github.com/chianquan/typegoose#readme",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "keywords": [
+    "typegoose"
+  ]
 }
