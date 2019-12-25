@@ -2,13 +2,13 @@
   "name": "@pagoda/typegoose",
   "version": "0.0.1",
   "description": "It's PAGODA company customized version of typegoose. Define Mongoose models using TypeScript classes.",
-  "main": "lib/typegoose.js",
+  "main": "lib/src/typegoose.js",
   "files": [
-    "lib/*.js",
-    "lib/*.d.ts"
+    "lib/**/*.js",
+    "lib/**/*.d.ts"
   ],
   "scripts": {
-    "start": "npm run build && node ./lib/typegoose.js",
+    "start": "npm run build && node ./lib/src/typegoose.js",
     "build": "rimraf lib && tsc",
     "lint": "tslint --project tsconfig.json",
     "test": "npm run lint && nyc npm run mocha",

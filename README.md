@@ -175,3 +175,7 @@ class Cock extends Model {
       commonId: Ref<Tmp1>;
     }
 ```
+
+### LICENCE
+
+MIT
