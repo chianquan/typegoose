@@ -1,5 +1,5 @@
 {
-  "name": "@pagoda/typegoose",
+  "name": "@pagodas/typegoose",
   "version": "0.0.1",
   "description": "It's PAGODA company customized version of typegoose. Define Mongoose models using TypeScript classes.",
   "main": "lib/src/typegoose.js",
